@@ -36,7 +36,7 @@ def get_mistakes(clf, X_q1q2, y):
     """
     predictions = clf.predict(X_q1q2)
     incorrect_predictions = predictions != y
-    incorrect_indices = np.where(incorrect_predictions)
+    incorrect_indices = np.where(incorrect_predictions)[0]
 
     if np.sum(incorrect_predictions) == 0:
         print("No mistakes found.")
