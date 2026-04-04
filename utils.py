@@ -362,19 +362,6 @@ def _graph_features_single(q1, q2, q_freq, pair_freq):
     return [f1, f2, abs(f1 - f2), f1 + f2, min(f1, f2), pf]
 
 
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-
-# Load once (global)
-EMBEDDER = SentenceTransformer("all-MiniLM-L6-v2")
-
-
-def embedding_cosine_similarity(text1, text2):
-    emb1 = EMBEDDER.encode([str(text1)])[0]
-    emb2 = EMBEDDER.encode([str(text2)])[0]
-    return float(cosine_similarity([emb1], [emb2])[0][0])
-
-
 FEATURE_NAMES = [
     # Statistical (6)
     "jaccard",
@@ -388,13 +375,12 @@ FEATURE_NAMES = [
     "tfidf_cosine_no_stopwords",
     "lcs_ratio",
     "lcs_ratio_no_stopwords",
-    "embedding_cosine",
     # Graph (6)
     "q1_freq",
     "q2_freq",
     "freq_diff",
     "freq_sum",
-    # "freq_min",
+    "freq_min",
     "pair_count",
 ]
 
@@ -430,9 +416,8 @@ def get_features(df, q_freq, pair_freq):
         features[i, 7] = tfidf_cosine_similarity(q1, q2, remove_stopwords=True)
         features[i, 8] = lcs_ratio(q1, q2, remove_stopwords=False)
         features[i, 9] = lcs_ratio(q1, q2, remove_stopwords=True)
-        features[i, 10] = embedding_cosine_similarity(q1, q2)
         # Graph
-        features[i, 11:] = _graph_features_single(q1, q2, q_freq, pair_freq)
+        features[i, 10:] = _graph_features_single(q1, q2, q_freq, pair_freq)
 
     return features
 
@@ -454,6 +439,7 @@ def evaluate_model(clf, X, y, split_name, use_proba=True):
     return {
         "split": split_name,
         "roc_auc": round(roc_auc_score(y, y_score), 4),
+        "accuracy": round((y_pred == y).mean(), 4),
         "precision": round(precision_score(y, y_pred), 4),
-        "recall": round(recall_score(y, y_pred), 4),
+        "recall": round(recall_score(y, y_pred), 4)
     }
